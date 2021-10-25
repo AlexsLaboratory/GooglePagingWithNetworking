@@ -22,15 +22,12 @@ import androidx.paging.PagingSource.LoadParams.Prepend
 import androidx.paging.PagingSource.LoadResult.Page
 import androidx.paging.PagingState
 import com.android.example.paging.pagingwithnetwork.reddit.api.RedditApi
-import com.android.example.paging.pagingwithnetwork.reddit.repository.inMemory.byItem.ItemKeyedSubredditPagingSource
 import com.android.example.paging.pagingwithnetwork.reddit.vo.RedditPost
 import retrofit2.HttpException
 import java.io.IOException
 
 /**
  * A [PagingSource] that uses the before/after keys returned in page requests.
- *
- * @see ItemKeyedSubredditPagingSource
  */
 class PageKeyedSubredditPagingSource(
     private val redditApi: RedditApi,

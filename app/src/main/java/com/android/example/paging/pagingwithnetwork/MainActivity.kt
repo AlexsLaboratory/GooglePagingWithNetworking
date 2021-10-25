@@ -32,13 +32,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        binding.withDatabase.setOnClickListener {
-            show(RedditPostRepository.Type.DB)
-        }
-        binding.networkOnly.setOnClickListener {
-            show(RedditPostRepository.Type.IN_MEMORY_BY_ITEM)
-        }
+        
         binding.networkOnlyWithPageKeys.setOnClickListener {
             show(RedditPostRepository.Type.IN_MEMORY_BY_PAGE)
         }

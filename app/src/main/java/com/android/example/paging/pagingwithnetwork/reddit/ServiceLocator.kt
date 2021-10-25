@@ -20,10 +20,7 @@ import android.app.Application
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.android.example.paging.pagingwithnetwork.reddit.api.RedditApi
-import com.android.example.paging.pagingwithnetwork.reddit.db.RedditDb
 import com.android.example.paging.pagingwithnetwork.reddit.repository.RedditPostRepository
-import com.android.example.paging.pagingwithnetwork.reddit.repository.inDb.DbRedditPostRepository
-import com.android.example.paging.pagingwithnetwork.reddit.repository.inMemory.byItem.InMemoryByItemRepository
 import com.android.example.paging.pagingwithnetwork.reddit.repository.inMemory.byPage.InMemoryByPageKeyRepository
 
 /**
@@ -31,60 +28,54 @@ import com.android.example.paging.pagingwithnetwork.reddit.repository.inMemory.b
  * for testing.
  */
 interface ServiceLocator {
-    companion object {
-        private val LOCK = Any()
-        private var instance: ServiceLocator? = null
-        fun instance(context: Context): ServiceLocator {
-            synchronized(LOCK) {
-                if (instance == null) {
-                    instance = DefaultServiceLocator(
-                            app = context.applicationContext as Application,
-                            useInMemoryDb = false)
-                }
-                return instance!!
-            }
+  companion object {
+    private val LOCK = Any()
+    private var instance: ServiceLocator? = null
+    fun instance(context: Context): ServiceLocator {
+      synchronized(LOCK) {
+        if (instance == null) {
+          instance = DefaultServiceLocator(
+            app = context.applicationContext as Application,
+            useInMemoryDb = false
+          )
         }
-
-        /**
-         * Allows tests to replace the default implementations.
-         */
-        @VisibleForTesting
-        fun swap(locator: ServiceLocator) {
-            instance = locator
-        }
+        return instance!!
+      }
     }
 
-    fun getRepository(type: RedditPostRepository.Type): RedditPostRepository
+    /**
+     * Allows tests to replace the default implementations.
+     */
+    @VisibleForTesting
+    fun swap(locator: ServiceLocator) {
+      instance = locator
+    }
+  }
 
-    fun getRedditApi(): RedditApi
+  fun getRepository(type: RedditPostRepository.Type): RedditPostRepository
+
+  fun getRedditApi(): RedditApi
 }
 
 /**
  * default implementation of ServiceLocator that uses production endpoints.
  */
-open class DefaultServiceLocator(val app: Application, val useInMemoryDb: Boolean) : ServiceLocator {
-    private val db by lazy {
-        RedditDb.create(app, useInMemoryDb)
-    }
+open class DefaultServiceLocator(val app: Application, val useInMemoryDb: Boolean) :
+  ServiceLocator {
+  private val api by lazy {
+    RedditApi.create()
+  }
 
-    private val api by lazy {
-        RedditApi.create()
+  override fun getRepository(type: RedditPostRepository.Type): RedditPostRepository {
+    return when (type) {
+      RedditPostRepository.Type.IN_MEMORY_BY_PAGE -> InMemoryByPageKeyRepository(
+        redditApi = getRedditApi()
+      )
+      else -> InMemoryByPageKeyRepository(
+        redditApi = getRedditApi()
+      )
     }
+  }
 
-    override fun getRepository(type: RedditPostRepository.Type): RedditPostRepository {
-        return when (type) {
-            RedditPostRepository.Type.IN_MEMORY_BY_ITEM -> InMemoryByItemRepository(
-                    redditApi = getRedditApi()
-            )
-            RedditPostRepository.Type.IN_MEMORY_BY_PAGE -> InMemoryByPageKeyRepository(
-                    redditApi = getRedditApi()
-            )
-            RedditPostRepository.Type.DB -> DbRedditPostRepository(
-                db = db,
-                redditApi = getRedditApi()
-            )
-        }
-    }
-
-    override fun getRedditApi(): RedditApi = api
+  override fun getRedditApi(): RedditApi = api
 }
